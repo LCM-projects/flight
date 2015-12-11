@@ -60,6 +60,10 @@ bool quiet_mode = false;
 double timer_sum = 0;
 int timer_count = 0;
 
+
+
+
+
 dc1394_t        *d;
 dc1394camera_t  *camera;
 
@@ -244,6 +248,43 @@ int main(int argc, char *argv[])
     sigaction(SIGINT, &sigIntHandler, NULL);
     // --- end ctrl-c handling code ---
 
+
+
+    // try to detect cameras using FlyCapture2
+    FlyCapture2::Error error;
+    FlyCapture2::BusManager busMgr;
+    unsigned int numCameras;
+    error = busMgr.GetNumOfCameras(&numCameras);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        return -1;
+    }
+
+    if ( numCameras != 2 )
+    {
+       std::cout << "Did not find 2 cameras.  Found " << numCameras << " cameras." << std::endl; 
+       return -1;
+    }
+    else
+    {
+       std::cout << "Found 2 cameras!" << std::endl; 
+    }
+
+    FlyCapture2::PGRGuid guidRight, guidLeft;
+    error = busMgr.GetCameraFromIndex(0, &guidRight);
+    error = busMgr.GetCameraFromIndex(1, &guidLeft);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+       error.PrintErrorTrace();
+       return -1;
+    }
+
+    std::cout << "I have guids" << std::endl;
+
+
+
+
     dc1394error_t   err;
     dc1394error_t   err2;
 
@@ -253,42 +294,90 @@ int main(int argc, char *argv[])
     setNumThreads(1);
 
     if (recording_manager.UsingLiveCameras()) {
-        d = dc1394_new ();
-        if (!d)
-            cerr << "Could not create dc1394 context" << endl;
 
-        d2 = dc1394_new ();
-        if (!d2)
-            cerr << "Could not create dc1394 context for camera 2" << endl;
 
-        camera = dc1394_camera_new (d, guid);
-        if (!camera)
+        FlyCapture2::Camera camRight, camLeft;
+
+        // Connect to camera Right
+        error = camRight.Connect(&guidRight);
+        if (error != FlyCapture2::PGRERROR_OK)
         {
-            cerr << "Could not create dc1394 camera... quitting." << endl;
-            exit(1);
+            error.PrintErrorTrace();
+            return -1;
         }
 
-        camera2 = dc1394_camera_new (d2, guid2);
-        if (!camera2)
-            cerr << "Could not create dc1394 camera for camera 2" << endl;
-        // reset the bus
-        dc1394_reset_bus(camera);
-        dc1394_reset_bus(camera2);
+        // Connect to camera Left
+        error = camLeft.Connect(&guidLeft);
+        if (error != FlyCapture2::PGRERROR_OK)
+        {
+            error.PrintErrorTrace();
+            return -1;
+        }
 
-        // setup
-        err = setup_gray_capture(camera, DC1394_VIDEO_MODE_FORMAT7_1);
-        DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not setup camera");
+        std::cout << "Successfully connected to both cameras" << std::endl;
 
-        err2 = setup_gray_capture(camera2, DC1394_VIDEO_MODE_FORMAT7_1);
-        DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not setup camera number 2");
+        // Start capturing images
+        cout << "Starting capture... " << endl; 
+        error = camRight.StartCapture();
+        if (error != FlyCapture2::PGRERROR_OK)
+        {
+            error.PrintErrorTrace();
+            return -1;
+        }
 
-        // enable camera
-        err = dc1394_video_set_transmission(camera, DC1394_ON);
-        DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not start camera iso transmission");
-        err2 = dc1394_video_set_transmission(camera2, DC1394_ON);
-        DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not start camera iso transmission for camera number 2");
+        std::cout << "Successfully started capturing from first camera" << std::endl;
 
-        InitBrightnessSettings(camera, camera2, enable_gamma);
+        error = camLeft.StartCapture();
+        if (error != FlyCapture2::PGRERROR_OK)
+        {
+            error.PrintErrorTrace();
+            return -1;
+        }
+
+        std::cout << "Successfully started capturing from second camera" << std::endl;
+
+        
+        // d = dc1394_new ();
+        // if (!d)
+        //     cerr << "Could not create dc1394 context" << endl;
+
+        // d2 = dc1394_new ();
+        // if (!d2)
+        //     cerr << "Could not create dc1394 context for camera 2" << endl;
+
+        // camera = dc1394_camera_new (d, guid);
+        // if (!camera)
+        // {
+        //     cerr << "Could not create dc1394 camera... quitting." << endl;
+        //     exit(1);
+        // }
+
+        // camera2 = dc1394_camera_new (d2, guid2);
+        // if (!camera2)
+        //     cerr << "Could not create dc1394 camera for camera 2" << endl;
+        // // reset the bus
+        // dc1394_reset_bus(camera);
+        // dc1394_reset_bus(camera2);
+
+        // // setup
+        // err = setup_gray_capture(camera, DC1394_VIDEO_MODE_FORMAT7_1);
+        // DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not setup camera");
+
+        // err2 = setup_gray_capture(camera2, DC1394_VIDEO_MODE_FORMAT7_1);
+        // DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not setup camera number 2");
+
+        // // enable camera
+        // err = dc1394_video_set_transmission(camera, DC1394_ON);
+        // DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not start camera iso transmission");
+        // err2 = dc1394_video_set_transmission(camera2, DC1394_ON);
+        // DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not start camera iso transmission for camera number 2");
+
+
+        // #########
+        // TO-DO need to deal with brightness settings later
+        // #########
+
+        //InitBrightnessSettings(camera, camera2, enable_gamma);
     }
 
     if (show_display) {

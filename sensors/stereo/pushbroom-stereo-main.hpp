@@ -54,6 +54,10 @@
 #include "../../ui/hud/hud.hpp"
 #include "RecordingManager.hpp"
 
+#include "FlyCapture2.h"
+//#include "stdafx.h"
+
+
 using namespace std;
 using namespace cv;
 

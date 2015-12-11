@@ -35,6 +35,8 @@ DC1394=/usr/include/dc1394
 DC1394_LIB=/usr/local/lib/libdc1394.so
 FIREFLY_MV_UTILS_LIB=/usr/local/lib/firefly-mv-utils/libutil.so -Wl,-rpath -Wl,/usr/local/lib/firefly-mv-utils
 
+FLYCAP=/usr/include/flycapture
+
 # --- libraries ----
 
 MAVCONN_LIB_DIR=/home/$(USER)/mav/mavconn/build/lib/
@@ -50,9 +52,9 @@ GTEST_LIB=../../externals/gtest/libgtest.a ../../externals/gtest/libgtest_main.a
 
 CXXFLAGS=-std=c++0x
 
-CPPFLAGS=-c -Wall -O3 -fopenmp -I/usr/local/include/opencv2 `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH_PRONTO) pkg-config --cflags $(REQUIRES) $(REQUIRES_EXTRA)` -I$(MAVCONN_INCLUDE) -I$(LOCAL_MAVLINK) -I$(MAVLINK_INCLUDE) -I$(FIREFLY_MV_UTILS) -I$(DC1394) -I$(GTEST_INCLUDE) -I$(SMC_INCLUDE)
+CPPFLAGS=-c -Wall -O3 -fopenmp -I/usr/local/include/opencv2 `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH_PRONTO) pkg-config --cflags $(REQUIRES) $(REQUIRES_EXTRA)` -I$(MAVCONN_INCLUDE) -I$(LOCAL_MAVLINK) -I$(MAVLINK_INCLUDE) -I$(FIREFLY_MV_UTILS) -I$(DC1394) -I$(GTEST_INCLUDE) -I$(SMC_INCLUDE) -I$(FLYCAP)
 
-LDPOSTFLAGS = -fopenmp `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH_PRONTO) pkg-config --libs $(REQUIRES) $(REQUIRES_EXTRA)` -lgthread-2.0 -lboost_system -lboost_filesystem $(LCMLIB) $(MAVCONN) $(FIREFLY_MV_UTILS_LIB) $(GTEST_LIB) $(OCTOMAP_LIB) $(LCM_PRONTO_LIB) -L $(DC1394_LIB) -ldc1394
+LDPOSTFLAGS = -fopenmp `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH_PRONTO) pkg-config --libs $(REQUIRES) $(REQUIRES_EXTRA)` -lgthread-2.0 -lboost_system -lboost_filesystem $(LCMLIB) $(MAVCONN) $(FIREFLY_MV_UTILS_LIB) $(GTEST_LIB) $(OCTOMAP_LIB) $(LCM_PRONTO_LIB) -L $(DC1394_LIB) -ldc1394 -lflycapture
 
 
 # include a standard makefile that uses these variables and builds everything

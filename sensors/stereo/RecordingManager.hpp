@@ -7,7 +7,7 @@
 #include <boost/format.hpp>
 #include "../../utils/utils/RealtimeUtils.hpp"
 
-#define RINGBUFFER_SIZE (120*50) // number of seconds to allocate for recording * framerate
+#define RINGBUFFER_SIZE (120*1) // number of seconds to allocate for recording * framerate
 
 using namespace std;
 using namespace cv;

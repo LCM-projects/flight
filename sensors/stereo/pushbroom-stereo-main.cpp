@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
     state.sadThreshold = stereoConfig.sadThreshold;
 
     
-    ;
+    state.mapxL = stereoCalibration.mx1fp;
     state.mapxR = stereoCalibration.mx2fp;
     state.Q = stereoCalibration.qMat;
     state.show_display = show_display;
@@ -596,11 +596,7 @@ int main(int argc, char *argv[])
             gettimeofday( &now, NULL );
             double before = now.tv_usec + now.tv_sec * 1000 * 1000;
 
-            std::cout << "We got up to ProcessImages" << std::endl;
-
             pushbroom_stereo.ProcessImages(matL, matR, &pointVector3d, &pointColors, &pointVector2d, state);
-
-            std::cout << "We got to after ProcessImages" << std::endl;
 
             gettimeofday( &now, NULL );
             double after = now.tv_usec + now.tv_sec * 1000 * 1000;

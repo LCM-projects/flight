@@ -20,7 +20,7 @@
 #include <arm_neon.h>
 #endif // USE_NEON
 
-#define NUM_THREADS 1
+#define NUM_THREADS 2
 //#define NUM_REMAP_THREADS 8
 
 using namespace cv;

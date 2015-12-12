@@ -53,6 +53,29 @@ Mat GetFrameFormat7(dc1394camera_t *camera)
     return matOut;
 }
 
+Mat GetFrameChameleon3(FlyCapture2::Camera *camera)
+{
+
+    FlyCapture2::Image rawImage;
+    FlyCapture2::Error error;
+
+    error = camera->RetrieveBuffer(&rawImage);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        std::cout << "Error grabbing image :( "<< std::endl; 
+    }
+
+    unsigned int rowBytes = (double)rawImage.GetReceivedDataSize() / (double)rawImage.GetRows();
+    cv::Mat matImage = cv::Mat(rawImage.GetRows(), rawImage.GetCols(), CV_8UC1, rawImage.GetData(), rowBytes);
+
+    // CV = openCV
+    // 8 = 8-bit grayscale image
+    // U = unsigned byes
+    // C1 = 1 channel image, since grayscale
+
+    return matImage;
+}
+
 /**
  * Flushes the camera buffer to ensure
  * that we are returning the most recent frames

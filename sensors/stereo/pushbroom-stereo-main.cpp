@@ -225,8 +225,8 @@ int main(int argc, char *argv[])
 
 
 
-    uint64 guid = stereoConfig.guidLeft;
-    uint64 guid2 = stereoConfig.guidRight;
+    //uint64 guid = stereoConfig.guidLeft;
+    //uint64 guid2 = stereoConfig.guidRight;
 
     // start up LCM
     lcm_t * lcm;
@@ -285,9 +285,11 @@ int main(int argc, char *argv[])
 
 
 
-    dc1394error_t   err;
-    dc1394error_t   err2;
+    //dc1394error_t   err;
+    //dc1394error_t   err2;
 
+
+    FlyCapture2::Camera camRight, camLeft;
 
     // tell opencv to use only one core so that we can manage our
     // own threading without a fight
@@ -296,7 +298,7 @@ int main(int argc, char *argv[])
     if (recording_manager.UsingLiveCameras()) {
 
 
-        FlyCapture2::Camera camRight, camLeft;
+        
 
         // Connect to camera Right
         error = camRight.Connect(&guidRight);
@@ -499,8 +501,13 @@ int main(int argc, char *argv[])
     bool quit = false;
 
     if (recording_manager.UsingLiveCameras()) {
-        matL = GetFrameFormat7(camera);
-        matR = GetFrameFormat7(camera2);
+        
+
+        //matL = GetFrameFormat7(camera);
+        //matR = GetFrameFormat7(camera2);
+
+        matL = GetFrameChameleon3(&camLeft);
+        matR = GetFrameChameleon3(&camRight);
 
         if (recording_manager.InitRecording(matL, matR) != true) {
             // failed to init recording, things are going bad.  bail.
@@ -508,7 +515,11 @@ int main(int argc, char *argv[])
         }
 
         // before we start, turn the cameras on and set the brightness and exposure
-        MatchBrightnessSettings(camera, camera2, true, force_brightness, force_exposure);
+        
+        // ######
+        // TODO: come back and write MatchBrightness..
+        // ######
+        // MatchBrightnessSettings(camera, camera2, true, force_brightness, force_exposure);
 
         // grab a few frames and send them over LCM for the user
         // to verify that everything is working
@@ -518,10 +529,10 @@ int main(int argc, char *argv[])
 
             for (int i = 0; i < 5; i++) {
 
-                matL = GetFrameFormat7(camera);
+                matL = GetFrameChameleon3(&camLeft);
                 SendImageOverLcm(lcm, "stereo_image_left", matL, 50);
 
-                matR = GetFrameFormat7(camera2);
+                matR = GetFrameChameleon3(&camRight);
                 SendImageOverLcm(lcm, "stereo_image_right", matR, 50);
 
                 // don't send these too fast, otherwise we'll flood the ethernet link
@@ -545,6 +556,9 @@ int main(int argc, char *argv[])
     struct timeval start, now;
     gettimeofday( &start, NULL );
 
+
+    std::cout << "win, we are about to start 'the real thing' - Andy Barry" << std::endl;
+
     while (quit == false) {
 
         // get the frames from the camera
@@ -554,12 +568,12 @@ int main(int argc, char *argv[])
             // match brightness every 10 frames instead
             if (numFrames % MATCH_BRIGHTNESS_EVERY_N_FRAMES == 0)
             {
-                MatchBrightnessSettings(camera, camera2);
+                //MatchBrightnessSettings(camera, camera2);
             }
 
             // capture images from the cameras
-            matL = GetFrameFormat7(camera);
-            matR = GetFrameFormat7(camera2);
+            matL = GetFrameChameleon3(&camLeft);
+            matR = GetFrameChameleon3(&camRight);
 
             // record video
             recording_manager.AddFrames(matL, matR);

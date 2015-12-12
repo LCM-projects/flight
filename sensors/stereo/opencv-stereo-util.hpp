@@ -25,6 +25,8 @@
 #include "../../LCM/lcmt_stereo.h"
 #include "../../utils/utils/RealtimeUtils.hpp"
 
+ #include "FlyCapture2.h"
+
 
 
 extern "C"
@@ -106,6 +108,8 @@ struct OpenCvStereoCalibration
 };
 
 Mat GetFrameFormat7(dc1394camera_t *camera);
+
+cv::Mat GetFrameChameleon3(FlyCapture2::Camera *camera);
 
 void FlushCameraBuffer(dc1394camera_t *camera);
 

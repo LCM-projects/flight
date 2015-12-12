@@ -61,74 +61,151 @@ printf("got config\n");
     uint64 guid2 = stereo_config.guidRight;
 
 
-    dc1394_t        *d;
-    dc1394camera_t  *camera;
-    dc1394error_t   err;
+    FlyCapture2::Error error;
+    
+    FlyCapture2::BusManager busMgr;
+
+    //dc1394_t        *d;
+    //dc1394camera_t  *camera;
+    //dc1394error_t   err;
 
     Mat frame_array_left[MAX_FRAMES];
     Mat frame_array_right[MAX_FRAMES];
 
     int numFrames = 0;
 
+    unsigned int numCameras;
+    error = busMgr.GetNumOfCameras(&numCameras);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        return -1;
+    }
+
+    if ( numCameras != 2 )
+    {
+       std::cout << "Did not find 2 cameras.  Found " << numCameras << " cameras." << std::endl; 
+       return -1;
+    }
+    else
+    {
+       std::cout << "Found 2 cameras!" << std::endl; 
+    }
+
+    FlyCapture2::PGRGuid guidRight, guidLeft;
+    error = busMgr.GetCameraFromIndex(0, &guidRight);
+    error = busMgr.GetCameraFromIndex(1, &guidLeft);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+       error.PrintErrorTrace();
+       return -1;
+    }
+
+    FlyCapture2::Camera camRight, camLeft;
+
+    // Connect to camera Right
+    error = camRight.Connect(&guidRight);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        return -1;
+    }
+
+    // Connect to camera Left
+    error = camLeft.Connect(&guidLeft);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        return -1;
+    }
+
+    std::cout << "Successfully connected to both cameras" << std::endl;
+
+    // Start capturing images
+    std::cout << "Starting capture... " << std::endl; 
+    error = camRight.StartCapture();
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        return -1;
+    }
+
+    std::cout << "Successfully started capturing from first camera" << std::endl;
+
+    error = camLeft.StartCapture();
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        return -1;
+    }
+
+    std::cout << "Successfully started capturing from second camera" << std::endl;
+
+
     // ----- cam 2 -----
-    dc1394_t        *d2;
-    dc1394camera_t  *camera2;
-    dc1394error_t   err2;
+    //dc1394_t        *d2;
+    //dc1394camera_t  *camera2;
+    //dc1394error_t   err2;
 
-    d = dc1394_new ();
-    if (!d)
-        g_critical("Could not create dc1394 context");
+    // d = dc1394_new ();
+    // if (!d)
+    //     g_critical("Could not create dc1394 context");
 
-    d2 = dc1394_new ();
-    if (!d2)
-        g_critical("Could not create dc1394 context for camera 2");
+    // d2 = dc1394_new ();
+    // if (!d2)
+    //     g_critical("Could not create dc1394 context for camera 2");
 
-    camera = dc1394_camera_new (d, guid);
-    if (!camera)
-        g_critical("Could not create dc1394 camera");
+    // camera = dc1394_camera_new (d, guid);
+    // if (!camera)
+    //     g_critical("Could not create dc1394 camera");
 
-    camera2 = dc1394_camera_new (d2, guid2);
-    if (!camera2)
-        g_critical("Could not create dc1394 camera for camera 2");
+    // camera2 = dc1394_camera_new (d2, guid2);
+    // if (!camera2)
+    //     g_critical("Could not create dc1394 camera for camera 2");
 
-    // setup
-    err = setup_gray_capture(camera, DC1394_VIDEO_MODE_FORMAT7_1);
-    DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not setup camera");
+    // // setup
+    // err = setup_gray_capture(camera, DC1394_VIDEO_MODE_FORMAT7_1);
+    // DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not setup camera");
 
-    err2 = setup_gray_capture(camera2, DC1394_VIDEO_MODE_FORMAT7_1);
-    DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not setup camera number 2");
+    // err2 = setup_gray_capture(camera2, DC1394_VIDEO_MODE_FORMAT7_1);
+    // DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not setup camera number 2");
 
-    // enable auto-exposure
-    // turn on the auto exposure feature
-    err = dc1394_feature_set_power(camera, DC1394_FEATURE_EXPOSURE, DC1394_ON);
-    DC1394_ERR_RTN(err,"Could not turn on the exposure feature");
+    // // enable auto-exposure
+    // // turn on the auto exposure feature
+    // err = dc1394_feature_set_power(camera, DC1394_FEATURE_EXPOSURE, DC1394_ON);
+    // DC1394_ERR_RTN(err,"Could not turn on the exposure feature");
 
-    err = dc1394_feature_set_mode(camera, DC1394_FEATURE_EXPOSURE, DC1394_FEATURE_MODE_ONE_PUSH_AUTO);
-    DC1394_ERR_RTN(err,"Could not turn on Auto-exposure");
+    // err = dc1394_feature_set_mode(camera, DC1394_FEATURE_EXPOSURE, DC1394_FEATURE_MODE_ONE_PUSH_AUTO);
+    // DC1394_ERR_RTN(err,"Could not turn on Auto-exposure");
 
-    // enable auto-exposure
-    // turn on the auto exposure feature
-    err = dc1394_feature_set_power(camera2, DC1394_FEATURE_EXPOSURE, DC1394_ON);
-    DC1394_ERR_RTN(err,"Could not turn on the exposure feature for cam2");
+    // // enable auto-exposure
+    // // turn on the auto exposure feature
+    // err = dc1394_feature_set_power(camera2, DC1394_FEATURE_EXPOSURE, DC1394_ON);
+    // DC1394_ERR_RTN(err,"Could not turn on the exposure feature for cam2");
 
-    err = dc1394_feature_set_mode(camera2, DC1394_FEATURE_EXPOSURE, DC1394_FEATURE_MODE_ONE_PUSH_AUTO);
-    DC1394_ERR_RTN(err,"Could not turn on Auto-exposure for cam2");
+    // err = dc1394_feature_set_mode(camera2, DC1394_FEATURE_EXPOSURE, DC1394_FEATURE_MODE_ONE_PUSH_AUTO);
+    // DC1394_ERR_RTN(err,"Could not turn on Auto-exposure for cam2");
 
-    // enable camera
-    err = dc1394_video_set_transmission(camera, DC1394_ON);
-    DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not start camera iso transmission");
-    err2 = dc1394_video_set_transmission(camera2, DC1394_ON);
-    DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not start camera iso transmission for camera number 2");
+    // // enable camera
+    // err = dc1394_video_set_transmission(camera, DC1394_ON);
+    // DC1394_ERR_CLN_RTN(err, cleanup_and_exit(camera), "Could not start camera iso transmission");
+    // err2 = dc1394_video_set_transmission(camera2, DC1394_ON);
+    // DC1394_ERR_CLN_RTN(err2, cleanup_and_exit(camera2), "Could not start camera iso transmission for camera number 2");
+
+
+
+
+
 
     if (left_camera_mode || stereo_mode)
     {
-        InitBrightnessSettings(camera, camera2);
-        MatchBrightnessSettings(camera, camera2, true, force_brightness, force_exposure);
+        //InitBrightnessSettings(camera, camera2);
+        //MatchBrightnessSettings(camera, camera2, true, force_brightness, force_exposure);
     } else {
         // use the right camera as the master for brightness
         // since we're calibrating that one
-        InitBrightnessSettings(camera2, camera);
-        MatchBrightnessSettings(camera2, camera, true);
+        //InitBrightnessSettings(camera2, camera);
+        //MatchBrightnessSettings(camera2, camera, true);
     }
 
     // make opencv windows
@@ -156,17 +233,17 @@ printf("got config\n");
         Mat chessL, chessR;
 
         // each loop dump a bunch of frames to clear the buffer
-        MatchBrightnessSettings(camera, camera2, true, force_brightness, force_exposure);
-        for (i=0;i<10;i++)
+        //MatchBrightnessSettings(camera, camera2, true, force_brightness, force_exposure);
+        for (i=0;i<1;i++)
         {
             if (left_camera_mode || stereo_mode)
             {
-                chessL = GetFrameFormat7(camera);
+                chessL = GetFrameChameleon3(&camLeft);
             }
 
             if (right_camera_mode || stereo_mode)
             {
-                chessR = GetFrameFormat7(camera2);
+                chessR = GetFrameChameleon3(&camRight);
             }
         }
 
@@ -209,8 +286,8 @@ printf("got config\n");
 
 
         // key codes:
-        // page up: 654365
-        // page down: 65366
+        // page up: ?
+        // page down: 86
         // b: 98
         char key = waitKey();
         //printf("%d\n", (int)key);
@@ -221,8 +298,8 @@ printf("got config\n");
             if (foundPattern)
             {
                 // this was a good one -- save it
-                frame_array_left[numFrames] = chessL;
-                frame_array_right[numFrames] = chessR;
+                frame_array_left[numFrames] = chessL.clone();
+                frame_array_right[numFrames] = chessR.clone();
 
                 // give the user some guidence on the number
                 // of frames they should be using
@@ -286,18 +363,21 @@ printf("got config\n");
     destroyWindow("Input Left");
     destroyWindow("Input Right");
 
+
+    // Commented out stopping data transmission for now
+
     // stop data transmission
-    err = dc1394_video_set_transmission(camera, DC1394_OFF);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not stop the camera");
+    // err = dc1394_video_set_transmission(camera, DC1394_OFF);
+    // DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not stop the camera");
 
-    err2 = dc1394_video_set_transmission(camera2, DC1394_OFF);
-    DC1394_ERR_CLN_RTN(err2,cleanup_and_exit(camera2),"Could not stop the camera 2");
+    // err2 = dc1394_video_set_transmission(camera2, DC1394_OFF);
+    // DC1394_ERR_CLN_RTN(err2,cleanup_and_exit(camera2),"Could not stop the camera 2");
 
-    // close camera
-    cleanup_and_exit(camera);
-    cleanup_and_exit(camera2);
-    dc1394_free (d);
-    dc1394_free (d2);
+    // // close camera
+    // cleanup_and_exit(camera);
+    // cleanup_and_exit(camera2);
+    // dc1394_free (d);
+    // dc1394_free (d2);
 
     return 0;
 }

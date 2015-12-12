@@ -11,7 +11,7 @@
 // if USE_SAFTEY_CHECKS is 1, GetSAD will try to make sure
 // that it will do the right thing even if you ask it for pixel
 // values near the edges of images.  Set to 0 for a small speedup.
-#define USE_SAFTEY_CHECKS 0
+#define USE_SAFTEY_CHECKS 1
 
 #define INVARIANCE_CHECK_VERT_OFFSET_MIN (-8)
 #define INVARIANCE_CHECK_VERT_OFFSET_MAX 8
@@ -136,7 +136,7 @@ void* PushbroomStereo::WorkerThread(void *x) {
  */
 void PushbroomStereo::ProcessImages(InputArray _leftImage, InputArray _rightImage, cv::vector<Point3f> *pointVector3d, cv::vector<uchar> *pointColors, cv::vector<Point3i> *pointVector2d, PushbroomStereoState state) {
 
-    //cout << "[main] entering process images" << endl;
+    cout << "[main] entering process images" << endl;
 
     Mat leftImage = _leftImage.getMat();
     Mat rightImage = _rightImage.getMat();
@@ -158,35 +158,38 @@ void PushbroomStereo::ProcessImages(InputArray _leftImage, InputArray _rightImag
     Mat remapped_left(state.mapxL.rows, state.mapxL.cols, leftImage.depth());
     Mat remapped_right(state.mapxR.rows, state.mapxR.cols, rightImage.depth());
 
-
+    std::cout << "Banana" << std::endl;
+    std::cout << "[main] rows = " << rows << std::endl;
 
     for (int i = 0; i < NUM_THREADS; i++) {
-
+        std::cout << "Banana2" << std::endl;
         int start = rows/NUM_THREADS*i;
         int end = rows/NUM_THREADS*(i+1);
-
+std::cout << "Banana3" << std::endl;
         remap_thread_states_[i].left_image = leftImage;
         remap_thread_states_[i].right_image = rightImage;
-
+std::cout << "Banana4" << std::endl;
         // send in a subset of the map
+        std::cout << "[main] start = " << start << " end = " << end << std::endl;
         remap_thread_states_[i].submapxL = state.mapxL.rowRange(start, end);
+        std::cout << "Banana5" << std::endl;
         remap_thread_states_[i].submapxR = state.mapxR.rowRange(start, end);
-
+std::cout << "Banana6" << std::endl;
         // send in subsets of the arrays to be filled in
         remap_thread_states_[i].sub_remapped_left_image = remapped_left.rowRange(start, end);
 
         remap_thread_states_[i].sub_remapped_right_image = remapped_right.rowRange(start, end);
-
+        std::cout << "Banana7" << std::endl;
         StartWorkerThread(i, REMAP);
 
     }
-    //cout << "[main] all remap threads started" << endl;
+    cout << "[main] all remap threads started" << endl;
 
 
     // wait for all remapping threads to finish
     SyncWorkerThreads();
 
-    //cout << "[main] all remap threads finished" << endl;
+    cout << "[main] all remap threads finished" << endl;
 
 
     Mat laplacian_left(remapped_left.rows, remapped_left.cols, remapped_left.depth());
@@ -212,19 +215,21 @@ void PushbroomStereo::ProcessImages(InputArray _leftImage, InputArray _rightImag
         StartWorkerThread(i, INTEREST_OP);
     }
 
+
+
     SyncWorkerThreads();
 
     // now we have fully remapped both images
     //imshow("Left Block", remapped_right);
     //imshow("Right Block", laplacian_right);
 
-    //cout << "[main] imshow2 ok" << endl;
+    cout << "[main] imshow2 ok" << endl;
 
     cv::vector<Point3f> pointVector3dArray[NUM_THREADS+1];
     cv::vector<Point3i> pointVector2dArray[NUM_THREADS+1];
     cv::vector<uchar> pointColorsArray[NUM_THREADS+1];
 
-    //cout << "[main] firing worker threads..." << endl;
+    cout << "[main] firing worker threads..." << endl;
 
     if (state.lastValidPixelRow > 0) {
 
@@ -283,7 +288,7 @@ void PushbroomStereo::ProcessImages(InputArray _leftImage, InputArray _rightImag
     // wait for all the threads to come back
     SyncWorkerThreads();
 
-    //cout << "[main] got all stereo" << endl;
+    cout << "[main] got all stereo" << endl;
 
     int numPoints = 0;
     // compute the required size of our return vector

@@ -21,6 +21,8 @@
 
 #include "opencv-stereo-util.hpp"
 
+#include "FlyCapture2.h"
+
 using namespace cv;
 
 extern "C"

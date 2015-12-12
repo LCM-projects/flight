@@ -239,11 +239,13 @@ printf("got config\n");
             if (left_camera_mode || stereo_mode)
             {
                 chessL = GetFrameChameleon3(&camLeft);
+                chessL = chessL.clone();
             }
 
             if (right_camera_mode || stereo_mode)
             {
                 chessR = GetFrameChameleon3(&camRight);
+                chessR = chessR.clone();
             }
         }
 
